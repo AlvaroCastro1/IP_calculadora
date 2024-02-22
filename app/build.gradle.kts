@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.example.ip_calculadora"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.ip_calculadora"
