@@ -5,30 +5,77 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="227dp"
+        android:background="@drawable/gradientbackground"
+        android:bottom="50dp"
+        android:orientation="vertical">
+
+
+        <ImageView
+            android:layout_width="187dp"
+            android:layout_height="101dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/rounded_border"
+            android:baselineAligned="false"
+            android:src="@drawable/potro_circulo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/agbalumo"
+            android:text=" Protocolos "
+            android:textColor="#fff"
+            android:textSize="38sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     <EditText
         android:id="@+id/ipEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="250dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         android:hint="Ingrese la dirección IP"
         android:inputType="text" />
 
+    <Button
+        android:id="@+id/calcularButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/mascaraEditText"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="Calcular" />
+
     <EditText
-        android:id="@+id/bitsEditText"
+        android:id="@+id/mascaraEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/ipEditText"
-        android:layout_margin="16dp"
-        android:hint="Ingrese el número de bits"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:hint="Ingrese el número de bits de la máscara de subred"
         android:inputType="number" />
 
-    <Button
-        android:id="@+id/submitButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/bitsEditText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="24dp"
-        android:text="Enviar" />
+    <TextView
+        android:id="@+id/resultadoTextView"
+        android:layout_width="412dp"
+        android:layout_height="162dp"
+        android:layout_below="@id/calcularButton"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="1dp"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="-2dp" />
 
 </RelativeLayout>
