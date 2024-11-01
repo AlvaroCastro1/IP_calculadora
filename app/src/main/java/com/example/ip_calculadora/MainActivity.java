@@ -5,36 +5,77 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import java.util.regex.Pattern;
+
 public class MainActivity extends AppCompatActivity {
-        private EditText ipEditText, mascaraEditText;
-        private TextView resultadoTextView;
+    private EditText ipEditText, mascaraEditText;
+    private TextView resultadoTextView;
 
-        @Override
-        protected void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.activity_main);
+    // Regex para una IP válida (IPv4)
+    private static final Pattern IP_ADDRESS
+            = Pattern.compile(
+            "^((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\\.){3}"
+                    + "(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$");
 
-            ipEditText = findViewById(R.id.ipEditText);
-            mascaraEditText = findViewById(R.id.mascaraEditText);
-            resultadoTextView = findViewById(R.id.resultadoTextView);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-            Button calcularButton = findViewById(R.id.calcularButton);
-            calcularButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
+        ipEditText = findViewById(R.id.ipEditText);
+        mascaraEditText = findViewById(R.id.mascaraEditText);
+        resultadoTextView = findViewById(R.id.resultadoTextView);
 
-                    calcularIP();
-                }
-            });
-        }
+        Button calcularButton = findViewById(R.id.calcularButton);
+        calcularButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                calcularIP();
+            }
+        });
+    }
 
     private void calcularIP() {
-        String direccionIP = ipEditText.getText().toString();
-        int bitsMascaraSubred = Integer.parseInt(mascaraEditText.getText().toString());
+        String direccionIP = ipEditText.getText().toString().trim();
+        String mascaraSubredStr = mascaraEditText.getText().toString().trim();
+
+        if (direccionIP.isEmpty()) {
+            resultadoTextView.setText(""); // Limpiar salida
+            Toast.makeText(this, "Por favor ingrese la dirección IP.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!isValidInetAddress(direccionIP)) {
+            resultadoTextView.setText(""); // Limpiar salida
+            Toast.makeText(this, "Por favor ingrese una dirección IP válida.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (mascaraSubredStr.isEmpty()) {
+            resultadoTextView.setText(""); // Limpiar salida
+            Toast.makeText(this, "Por favor ingrese el número de bits de la máscara de subred.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int bitsMascaraSubred;
+        try {
+            bitsMascaraSubred = Integer.parseInt(mascaraSubredStr);
+        } catch (NumberFormatException e) {
+            resultadoTextView.setText(""); // Limpiar salida
+            Toast.makeText(this, "La máscara de subred debe ser un número entero.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (bitsMascaraSubred < 0 || bitsMascaraSubred > 32) {
+            resultadoTextView.setText(""); // Limpiar salida
+            Toast.makeText(this, "La máscara de subred debe estar entre 0 y 32.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         try {
             InetAddress direccionInetAddress = InetAddress.getByName(direccionIP);
@@ -48,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
             String resultado = "Network ID: \n" + networkID.getHostAddress() + "\n"
                     + "Broadcast: \n" + broadcast.getHostAddress() + "\n"
-                    + "Network ID Siguiente: \n" + siguienteNetworkID.getHostAddress() + "\n" ;
+                    + "Network ID Siguiente: \n" + siguienteNetworkID.getHostAddress() + "\n";
 
             resultadoTextView.setText(resultado);
 
@@ -56,6 +97,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (UnknownHostException e) {
             resultadoTextView.setText("Error: Dirección IP no válida");
         }
+    }
+
+    private static boolean isValidInetAddress(String ip) {
+        return IP_ADDRESS.matcher(ip).matches();
     }
 
     private void imprimirRangoIP(byte[] bytesNetworkID, byte[] bytesBroadcast) throws UnknownHostException {
@@ -71,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
         resultadoTextView.setTextSize(18);
         resultadoTextView.append(rangoIP);
     }
-
 
     private static byte[] calcularMascaraSubred(int bitsMascaraSubred) {
         int mascaraSubred = 0xFFFFFFFF << (32 - bitsMascaraSubred);
@@ -104,6 +148,4 @@ public class MainActivity extends AppCompatActivity {
         bytesSiguienteNetworkID[3] += 1;
         return InetAddress.getByAddress(bytesSiguienteNetworkID);
     }
-
-
 }
