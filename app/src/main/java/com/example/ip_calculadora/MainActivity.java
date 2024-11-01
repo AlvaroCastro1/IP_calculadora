@@ -9,7 +9,6 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
@@ -87,14 +86,23 @@ public class MainActivity extends AppCompatActivity {
             InetAddress broadcast = calcularIPBroadcast(bytesDireccionIP, bytesMascaraSubred);
             InetAddress siguienteNetworkID = calcularSiguienteNetworkID(broadcast.getAddress());
 
-            String resultado = "Network ID: \n" + networkID.getHostAddress() + "\n"
+            String claseIP = determinarClaseIP(bytesDireccionIP);
+            int bitsMascaraPorOmision = obtenerMascaraPorOmision(claseIP);
+            int cantidadSubredes = calcularCantidadSubredes(bitsMascaraSubred, bitsMascaraPorOmision);
+            int cantidadDireccionesIP = calcularCantidadDireccionesIP(bitsMascaraSubred);
+
+            String resultado = "Clase de la IP: \n" + claseIP + "\n"
+                    + "Network ID: \n" + networkID.getHostAddress() + "\n"
                     + "Broadcast: \n" + broadcast.getHostAddress() + "\n"
-                    + "Network ID Siguiente: \n" + siguienteNetworkID.getHostAddress() + "\n";
+                    //+ "Network ID Siguiente: \n" + siguienteNetworkID.getHostAddress() + "\n"
+                    + "Cantidad de subredes disponibles: \n" + cantidadSubredes + "\n"
+                    + "Cantidad de direcciones IP disponibles: \n" + cantidadDireccionesIP + "\n";
 
             resultadoTextView.setText(resultado);
 
-            imprimirRangoIP(networkID.getAddress(), broadcast.getAddress());
+            //imprimirRangoIP(networkID.getAddress(), broadcast.getAddress());
         } catch (UnknownHostException e) {
+            resultadoTextView.setText(""); // Limpiar salida
             resultadoTextView.setText("Error: Dirección IP no válida");
         }
     }
@@ -147,5 +155,48 @@ public class MainActivity extends AppCompatActivity {
         byte[] bytesSiguienteNetworkID = bytesBroadcast.clone();
         bytesSiguienteNetworkID[3] += 1;
         return InetAddress.getByAddress(bytesSiguienteNetworkID);
+    }
+
+    private String determinarClaseIP(byte[] bytesDireccionIP) {
+        int primerOcteto = bytesDireccionIP[0] & 0xFF;
+
+        if (primerOcteto >= 1 && primerOcteto <= 126) {
+            return "Clase A";
+        } else if (primerOcteto >= 128 && primerOcteto <= 191) {
+            return "Clase B";
+        } else if (primerOcteto >= 192 && primerOcteto <= 223) {
+            return "Clase C";
+        } else if (primerOcteto >= 224 && primerOcteto <= 239) {
+            return "Clase D (Multicast)";
+        } else if (primerOcteto >= 240 && primerOcteto <= 255) {
+            return "Clase E (Reservada)";
+        } else {
+            return "Clase Desconocida";
+        }
+    }
+
+    private int obtenerMascaraPorOmision(String claseIP) {
+        switch (claseIP) {
+            case "Clase A":
+                return 8;
+            case "Clase B":
+                return 16;
+            case "Clase C":
+                return 24;
+            default:
+                return 0;
+        }
+    }
+
+    private int calcularCantidadSubredes(int bitsMascaraSubred, int bitsMascaraPorOmision) {
+        if (bitsMascaraSubred <= bitsMascaraPorOmision) {
+            return 1; // No se crean subredes si la máscara propuesta es igual o menor a la por omisión
+        }
+        return (int) Math.pow(2, bitsMascaraSubred - bitsMascaraPorOmision);
+    }
+
+    private int calcularCantidadDireccionesIP(int bitsMascaraSubred) {
+        int bitsHost = 32 - bitsMascaraSubred;
+        return (int) Math.pow(2, bitsHost) - 2;
     }
 }
