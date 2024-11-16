@@ -87,16 +87,20 @@ public class MainActivity extends AppCompatActivity {
             InetAddress siguienteNetworkID = calcularSiguienteNetworkID(broadcast.getAddress());
 
             String claseIP = determinarClaseIP(bytesDireccionIP);
+            String network_ID = calcularNetworkID(direccionIP, mascaraSubredStr);
+            String broadcast_Address = calcularBroadcast(direccionIP, mascaraSubredStr);
+
+
             int bitsMascaraPorOmision = obtenerMascaraPorOmision(claseIP);
-            int cantidadSubredes = calcularCantidadSubredes(bitsMascaraSubred, bitsMascaraPorOmision);
-            int cantidadDireccionesIP = calcularCantidadDireccionesIP(bitsMascaraSubred);
+            int cantidadDireccionesIP = calcularCantidadDireccionesIP(mascaraSubredStr);
+            int cantidadSubredes = calcularCantidadSubredes(direccionIP, mascaraSubredStr);
+
 
             String resultado = "Clase de la IP: \n" + claseIP + "\n"
-                    + "Network ID: \n" + networkID.getHostAddress() + "\n"
-                    + "Broadcast: \n" + broadcast.getHostAddress() + "\n"
-                    //+ "Network ID Siguiente: \n" + siguienteNetworkID.getHostAddress() + "\n"
-                    + "Cantidad de subredes disponibles: \n" + cantidadSubredes + "\n"
-                    + "Cantidad de direcciones IP disponibles: \n" + cantidadDireccionesIP + "\n";
+                    + "Network ID: \n" + network_ID + "\n"
+                    + "Broadcast: \n" + broadcast_Address + "\n"
+                    + "Cantidad de direcciones IP disponibles: \n" + cantidadDireccionesIP + "\n"
+                    + "Cantidad de subredes disponibles: \n" + cantidadSubredes + "\n";
 
             resultadoTextView.setText(resultado);
 
@@ -104,6 +108,178 @@ public class MainActivity extends AppCompatActivity {
         } catch (UnknownHostException e) {
             resultadoTextView.setText(""); // Limpiar salida
             resultadoTextView.setText("Error: Dirección IP no válida");
+        }
+    }
+
+    private String calcularNetworkID(String direccionIP, String mascaraSubredStr) {
+        try {
+            // Convertir la dirección IP en un arreglo de enteros
+            int[] ip = parseIPAddress(direccionIP);
+
+            // Convertir el número de bits de la máscara en un entero
+            int bitsMascaraSubred = Integer.parseInt(mascaraSubredStr);
+
+            // Generar la máscara de subred a partir del número de bits
+            int[] subnetMask = generateSubnetMask(bitsMascaraSubred);
+
+            // Realizar la operación AND para obtener la dirección de inicio de la subred (Network ID)
+            int[] networkAddress = calculateNetworkAddress(ip, subnetMask);
+
+            // Devolver el Network ID en formato String
+            return formatIPAddress(networkAddress);
+
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    // Métodos auxiliares
+
+    // Convierte una dirección IP en un arreglo de enteros
+    private int[] parseIPAddress(String ipAddress) throws Exception {
+        String[] parts = ipAddress.split("\\.");
+        if (parts.length != 4) throw new Exception("Dirección IP no válida");
+
+        int[] ip = new int[4];
+        for (int i = 0; i < 4; i++) {
+            ip[i] = Integer.parseInt(parts[i]);
+            if (ip[i] < 0 || ip[i] > 255) throw new Exception("Parte de la dirección IP fuera de rango");
+        }
+        return ip;
+    }
+
+    // Genera la máscara de subred en forma de un arreglo de enteros basado en el número de bits
+    private int[] generateSubnetMask(int bitsMascaraSubred) {
+        int[] subnetMask = new int[4];
+        int bitIndex = 0;
+
+        for (int i = 0; i < 4; i++) {
+            for (int j = 7; j >= 0; j--) {
+                if (bitIndex < bitsMascaraSubred) {
+                    subnetMask[i] |= (1 << j); // Establece el bit a 1
+                    bitIndex++;
+                }
+            }
+        }
+        return subnetMask;
+    }
+
+    // Realiza la operación AND entre la dirección IP y la máscara de subred
+    private int[] calculateNetworkAddress(int[] ip, int[] subnetMask) {
+        int[] networkAddress = new int[4];
+        for (int i = 0; i < 4; i++) {
+            networkAddress[i] = ip[i] & subnetMask[i];
+        }
+        return networkAddress;
+    }
+
+    // Convierte un arreglo de enteros a una dirección IP en formato String
+    private String formatIPAddress(int[] ip) {
+        return ip[0] + "." + ip[1] + "." + ip[2] + "." + ip[3];
+    }
+
+    private String calcularBroadcast(String direccionIP, String mascaraSubredStr) {
+        try {
+            // Convertir la dirección IP en un arreglo de enteros
+            int[] ip = parseIPAddress(direccionIP);
+
+            // Convertir el número de bits de la máscara en un entero
+            int bitsMascaraSubred = Integer.parseInt(mascaraSubredStr);
+
+            // Generar la máscara de subred a partir del número de bits
+            int[] subnetMask = generateSubnetMask(bitsMascaraSubred);
+
+            // Realizar la operación AND para obtener la dirección de inicio de la subred (Network ID)
+            int[] networkAddress = calculateNetworkAddress(ip, subnetMask);
+
+            // Calcular la dirección de broadcast
+            int[] broadcastAddress = calculateBroadcastAddress(networkAddress, subnetMask);
+
+            // Devolver la dirección de broadcast en formato String
+            return formatIPAddress(broadcastAddress);
+
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    // Método para calcular la dirección de broadcast
+    private int[] calculateBroadcastAddress(int[] networkAddress, int[] subnetMask) {
+        int[] broadcastAddress = new int[4];
+        for (int i = 0; i < 4; i++) {
+            // Cambiar los ceros de la máscara de subred a unos y aplicar a la dirección de red
+            broadcastAddress[i] = networkAddress[i] | ~subnetMask[i] & 0xFF;
+        }
+        return broadcastAddress;
+    }
+
+    private int calcularCantidadDireccionesIP(String mascaraSubredStr) {
+        try {
+            // Convertir el número de bits de la máscara en un entero
+            int bitsMascaraSubred = Integer.parseInt(mascaraSubredStr);
+
+            // Calcular el número de ceros en la máscara de subred
+            int numeroDeCeros = 32 - bitsMascaraSubred;
+
+            // Calcular la cantidad de direcciones IP: 2^(# ceros)
+            int cantidadDireccionesIP = (int) Math.pow(2, numeroDeCeros);
+
+            return cantidadDireccionesIP;
+
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    private int calcularCantidadSubredes(String direccionIP, String mascaraSubredStr) {
+        try {
+            // Convertir el número de bits de la máscara en un entero
+            int bitsMascaraSubred = Integer.parseInt(mascaraSubredStr);
+
+            // Determinar la clase de la dirección IP
+            int[] ip = parseIPAddress(direccionIP);
+            char claseIP = determinarClaseIP(ip);
+
+            // Obtener la cantidad de bits de la máscara de subred por defecto según la clase
+            int bitsMascaraPorDefecto = obtenerMascaraPorDefecto(claseIP);
+
+            // Calcular la cantidad de subredes usando la fórmula: 2^(bits ingresados - bits por defecto)
+            int cantidadSubredes = (int) Math.pow(2, bitsMascaraSubred - bitsMascaraPorDefecto);
+
+            return cantidadSubredes;
+
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    // Método para determinar la clase de la dirección IP
+    private char determinarClaseIP(int[] ip) {
+        int primerOcteto = ip[0];
+        if (primerOcteto >= 1 && primerOcteto <= 126) {
+            return 'A';
+        } else if (primerOcteto >= 128 && primerOcteto <= 191) {
+            return 'B';
+        } else if (primerOcteto >= 192 && primerOcteto <= 223) {
+            return 'C';
+        } else if (primerOcteto >= 224 && primerOcteto <= 239) {
+            return 'D';
+        } else {
+            return 'E';
+        }
+    }
+
+    // Método para obtener la cantidad de bits de la máscara de subred por defecto según la clase
+    private int obtenerMascaraPorDefecto(char claseIP) {
+        switch (claseIP) {
+            case 'A':
+                return 8;
+            case 'B':
+                return 16;
+            case 'C':
+                return 24;
+            default:
+                return 0; // Las clases D y E no se utilizan para subredes estándar
         }
     }
 
@@ -188,14 +364,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private int calcularCantidadSubredes(int bitsMascaraSubred, int bitsMascaraPorOmision) {
+    private int calcularCantidadSubredes_old(int bitsMascaraSubred, int bitsMascaraPorOmision) {
         if (bitsMascaraSubred <= bitsMascaraPorOmision) {
             return 1; // No se crean subredes si la máscara propuesta es igual o menor a la por omisión
         }
         return (int) Math.pow(2, bitsMascaraSubred - bitsMascaraPorOmision);
     }
 
-    private int calcularCantidadDireccionesIP(int bitsMascaraSubred) {
+    private int calcularCantidadDireccionesIP_old(int bitsMascaraSubred) {
         int bitsHost = 32 - bitsMascaraSubred;
         return (int) Math.pow(2, bitsHost) - 2;
     }
