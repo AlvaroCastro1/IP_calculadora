@@ -15,6 +15,9 @@ public class MainActivity extends AppCompatActivity {
     private EditText ipEditText, mascaraEditText;
     private TextView resultadoTextView;
 
+    private Button limpiarButton;
+
+
     // Regex para una IP válida (IPv4)
     private static final Pattern IP_ADDRESS
             = Pattern.compile(
@@ -31,6 +34,13 @@ public class MainActivity extends AppCompatActivity {
         resultadoTextView = findViewById(R.id.resultadoTextView);
 
         Button calcularButton = findViewById(R.id.calcularButton);
+        limpiarButton = findViewById(R.id.limpiarButton);
+
+        limpiarButton.setOnClickListener(view -> {
+            ipEditText.setText(""); // Limpia el campo de dirección IP
+            mascaraEditText.setText(""); // Limpia el campo de máscara de subred
+            resultadoTextView.setText(""); // Limpia el resultado
+        });
         calcularButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -41,7 +51,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void calcularIP() {
         String direccionIP = ipEditText.getText().toString().trim();
-        String mascaraSubredStr = mascaraEditText.getText().toString().trim();
+        String mascara_de_Subred_Str = mascaraEditText.getText().toString().trim();
+        String mascaraSubredStr = "";
+
+        if (esMascaraSubredValida(mascara_de_Subred_Str)) {
+            // La máscara de subred es válida, procede con los cálculos
+            mascaraSubredStr = contarBitsEnUno(mascara_de_Subred_Str)+"";
+            //Toast.makeText(this, "Máscara de subred válida "+ mascaraSubredStr, Toast.LENGTH_SHORT).show();
+        } else {
+            // La máscara de subred no es válida
+            Toast.makeText(this, "Por favor ingrese una máscara de subred válida", Toast.LENGTH_SHORT).show();
+        }
 
         if (direccionIP.isEmpty()) {
             resultadoTextView.setText(""); // Limpiar salida
@@ -108,6 +128,58 @@ public class MainActivity extends AppCompatActivity {
         } catch (UnknownHostException e) {
             resultadoTextView.setText(""); // Limpiar salida
             resultadoTextView.setText("Error: Dirección IP no válida");
+        }
+    }
+
+    // Método para verificar si la máscara de subred es válida
+    private boolean esMascaraSubredValida(String mascaraSubred) {
+        try {
+            // Convertir la máscara de subred en un arreglo de enteros
+            int[] subnetMask = parseIPAddress(mascaraSubred);
+
+            // Convertir la máscara de subred a un número entero de 32 bits
+            int mascaraEnBits = 0;
+            for (int i = 0; i < 4; i++) {
+                mascaraEnBits = (mascaraEnBits << 8) | subnetMask[i];
+            }
+
+            // Verificar que la máscara de subred sea válida: unos consecutivos seguidos solo por ceros
+            boolean haVistoCeros = false;
+            for (int i = 31; i >= 0; i--) {
+                if ((mascaraEnBits & (1 << i)) == 0) {
+                    haVistoCeros = true; // Comienza a ver ceros
+                } else if (haVistoCeros) {
+                    return false; // Si ve un 1 después de haber visto ceros, no es válida
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            return false; // Si hay algún error en la conversión, no es válida
+        }
+    }
+
+    // Método para contar la cantidad de 1s en la máscara de subred
+    private int contarBitsEnUno(String mascaraSubred) {
+        try {
+            // Convertir la máscara de subred en un arreglo de enteros
+            int[] subnetMask = parseIPAddress(mascaraSubred);
+
+            // Convertir la máscara de subred a un número entero de 32 bits
+            int mascaraEnBits = 0;
+            for (int i = 0; i < 4; i++) {
+                mascaraEnBits = (mascaraEnBits << 8) | subnetMask[i];
+            }
+
+            // Contar la cantidad de 1s en la representación binaria de la máscara
+            int contador = 0;
+            for (int i = 0; i < 32; i++) {
+                if ((mascaraEnBits & (1 << i)) != 0) {
+                    contador++;
+                }
+            }
+            return contador;
+        } catch (Exception e) {
+            return 0; // Retornar 0 si hay algún error
         }
     }
 

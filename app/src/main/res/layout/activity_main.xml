@@ -51,9 +51,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/mascaraEditText"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="235dp"
+        android:layout_marginTop="-3dp"
         android:text="Calcular" />
+
+    <Button
+        android:id="@+id/limpiarButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/mascaraEditText"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="84dp"
+        android:layout_marginTop="-3dp"
+        android:text="Limpiar" />
 
     <EditText
         android:id="@+id/mascaraEditText"
@@ -64,8 +75,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        android:hint="Ingrese el número de bits de la máscara de subred"
-        android:inputType="number" />
+        android:hint="Ingrese el número de bits de la máscara de subred"/>
 
     <TextView
         android:id="@+id/resultadoTextView"
