@@ -1,4 +1,7 @@
 package com.example.ip_calculadora;
+import android.text.InputFilter;
+import android.text.Spanned;
+
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -32,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
         ipEditText = findViewById(R.id.ipEditText);
         mascaraEditText = findViewById(R.id.mascaraEditText);
         resultadoTextView = findViewById(R.id.resultadoTextView);
+        // Aplica el filtro a ambos EditText
+        aplicarFiltro(ipEditText);
+        aplicarFiltro(mascaraEditText);
 
         Button calcularButton = findViewById(R.id.calcularButton);
         limpiarButton = findViewById(R.id.limpiarButton);
@@ -446,5 +452,22 @@ public class MainActivity extends AppCompatActivity {
     private int calcularCantidadDireccionesIP_old(int bitsMascaraSubred) {
         int bitsHost = 32 - bitsMascaraSubred;
         return (int) Math.pow(2, bitsHost) - 2;
+    }
+
+    // Método para aplicar un filtro que solo permite números y puntos
+    private void aplicarFiltro(EditText editText) {
+        editText.setFilters(new InputFilter[]{
+                new InputFilter() {
+                    @Override
+                    public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                        for (int i = start; i < end; i++) {
+                            if (!Character.isDigit(source.charAt(i)) && source.charAt(i) != '.') {
+                                return ""; // Rechaza el carácter no válido
+                            }
+                        }
+                        return null; // Acepta el carácter válido
+                    }
+                }
+        });
     }
 }
