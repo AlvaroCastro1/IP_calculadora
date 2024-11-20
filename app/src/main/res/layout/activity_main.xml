@@ -75,7 +75,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        android:hint="Ingrese el número de bits de la máscara de subred"/>
+        android:hint="Ingrese la máscara de subred"/>
 
     <TextView
         android:id="@+id/resultadoTextView"
